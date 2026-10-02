@@ -1,7 +1,5 @@
 {
   "values": [
-    "tracks:track_mount",
-    "tracks:suspension_track",
-    "tracks:track_drive_wheel"
+    "tracks:track_mount"
   ]
 }

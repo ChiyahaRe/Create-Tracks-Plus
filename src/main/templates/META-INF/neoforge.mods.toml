@@ -35,15 +35,12 @@ type = "required"
 versionRange = "[1.0.3,)"
 ordering = "AFTER"
 side = "BOTH"
+# Aeronautics/Offroad/Simulated are only ever distributed JarJar'd inside Create Aeronautics' "bundled"
+# artifact (mod id "aeronautics_bundled"), so that's the one mod id we actually require users to have -
+# it transitively brings in aeronautics/offroad/simulated at matching versions on its own.
 [[dependencies.tracks]]
-modId = "simulated"
+modId = "aeronautics_bundled"
 type = "required"
-versionRange = "[1.0.1,)"
-ordering = "AFTER"
-side = "BOTH"
-[[dependencies.tracks]]
-modId = "offroad"
-type = "required"
-versionRange = "[1.0.1,)"
+versionRange = "[1.2.1,)"
 ordering = "AFTER"
 side = "BOTH"
