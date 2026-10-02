@@ -116,7 +116,7 @@ extends Item {
             Direction facing = (Direction)level.getBlockState(pos).getValue(WheelMountBlock.HORIZONTAL_FACING);
             if (clickedFace == facing) {
                 axisName = "height";
-                value = wheelMount.tracks$adjustHeightOffset(direction);
+                value = wheelMount.tracks$adjustHeightOffset(direction, false);
             } else if (clickedFace.getAxis() == Direction.Axis.Y) {
                 axisName = "forward/back";
                 value = wheelMount.tracks$adjustLongitudinalOffset(direction);
@@ -140,7 +140,7 @@ extends Item {
                 value = track.adjustLateralOffset(direction);
             } else {
                 axisName = "height";
-                value = track.adjustHeightOffset(direction);
+                value = track.adjustHeightOffset(direction, true);
             }
             this.positionFeedback(level, pos, player, axisName, value);
             return InteractionResult.sidedSuccess((boolean)level.isClientSide);
@@ -213,7 +213,7 @@ extends Item {
     public static enum TuningMode {
         STRENGTH("strength", "item.tracks.suspension_key.mode.strength", false),
         SPRING("spring", "item.tracks.suspension_key.mode.spring", true),
-        DAMPING("damping", "item.tracks.suspension_key.mode.damping", false),
+        DAMPING("damping", "item.tracks.suspension_key.mode.damping", true),
         BUMP_CLEARANCE("bump_clearance", "item.tracks.suspension_key.mode.bump_clearance", false),
         BUMP_FORCE("bump_force", "item.tracks.suspension_key.mode.bump_force", false),
         MAX_IMPULSE("max_impulse", "item.tracks.suspension_key.mode.max_impulse", false),

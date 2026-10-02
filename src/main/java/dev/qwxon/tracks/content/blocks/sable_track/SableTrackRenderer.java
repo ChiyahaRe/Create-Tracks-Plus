@@ -157,9 +157,6 @@ extends KineticBlockEntityRenderer<SableTrackBlockEntity> {
         }
         PartialModel partialModel = wheel = role == SableTrackRole.DRIVE ? TracksPartialModels.TRACKWORK_COGS : TracksPartialModels.TRACKWORK_WHEELS;
         double currentHeightOffset = heightOffset;
-        if (role == SableTrackRole.DRIVE) {
-             currentHeightOffset = 0;
-        }
         double wheelVisualYOffset = role == SableTrackRole.DRIVE ? -0.8 : -1.0;
         if (role == SableTrackRole.SUSPENSION && !be.isVisualSuspensionHidden()) {
             double wheelVisualY = verticalOffset + part.radius() + wheelVisualYOffset + (double)tuning.wheel.y + currentHeightOffset;

@@ -28,6 +28,34 @@ sourceSets.main.resources {
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    maven { url = "https://maven.createmod.net" } // Create, Ponder, Flywheel
+    maven { url = "https://maven.ithundxr.dev/snapshots" } // Registrate
+    maven { url = "https://maven.blamejared.com" } // Veil (transitive dependency of Sable)
+    exclusiveContent { // Sable
+        forRepository {
+            maven {
+                name = "RyanHCode Maven"
+                url = "https://maven.ryanhcode.dev/releases"
+            }
+        }
+        filter {
+            includeGroup "dev.ryanhcode.sable"
+            includeGroup "dev.ryanhcode.sable-companion"
+        }
+    }
+    // Aeronautics/Offroad/Simulated have no official maven of their own; Create Aeronautics'
+    // "bundled" artifact (which JarJars matching builds of all three) is only published to Modrinth.
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
 }
 
 base {
@@ -115,14 +143,66 @@ neoForge {
 // "optional", meaning it will not be pulled by dependents of this mod.
 configurations {
     runtimeClasspath.extendsFrom localRuntime
+    // Held separately so we can unpack its JarJar'd sub-mods below without adding it to any real classpath twice.
+    aeronauticsBundle
+}
+
+// Unpacks the Aeronautics/Offroad/Simulated mod jars that Create Aeronautics JarJars internally, so we can
+// compile against classes matching the exact version that's actually loaded at runtime (see the compileOnly
+// use below for why this matters).
+var extractAeronauticsLibs = tasks.register("extractAeronauticsLibs", Copy) {
+    from({ zipTree(configurations.aeronauticsBundle.singleFile) }) {
+        include "META-INF/jarjar/dev.eriksonn.aeronautics.aeronautics-neoforge-*.jar"
+        include "META-INF/jarjar/dev.ryanhcode.offroad.offroad-neoforge-*.jar"
+        include "META-INF/jarjar/dev.simulated_team.simulated.simulated-neoforge-*.jar"
+        eachFile { fcd -> fcd.relativePath = new RelativePath(true, fcd.name) }
+    }
+    includeEmptyDirs = false
+    into layout.buildDirectory.dir("aeronauticsLibs")
 }
 
 dependencies {
     // implementation files("libs/tracks-neoforge-1.21.1-1.0.1.jar")
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // NOTE: we tried the officially documented "Depending on Create" pattern (Create's "slim" classifier +
+    // separately-declared Registrate/Flywheel/Ponder at matching versions) here, but that combination caused
+    // Create's own registry setup to fail ("Found unused register callbacks") on this NeoForge/Create build
+    // pairing - so we fall back to the full (non-slim) Create artifact via Modrinth instead. Registrate is
+    // still compileOnly against a local copy (see below) purely to avoid the ClassCastException we hit
+    // earlier from having two separate Registrate copies loaded at runtime; the full Create jar already
+    // JarJars a matching Registrate/Flywheel/Ponder, which is what's actually used at runtime.
+    implementation "maven.modrinth:create:UjX6dr61" // Create 6.0.10+mc1.21.1 (neoforge)
+    compileOnly files("libs/Registrate-MC1.21-1.3.0+67.jar")
+
+    // Sable's official maven (see github.com/ryanhcode/sable/wiki) ships the full mod artifact directly.
+    implementation("dev.ryanhcode.sable:sable-neoforge-${minecraft_version}:2.0.5")
+
+    // Aeronautics/Offroad/Simulated aren't published anywhere on their own; only Create Aeronautics'
+    // "bundled" artifact exists, and only on Modrinth. It JarJars matching 1.3.2 builds of all three,
+    // which is what actually supplies them at runtime for both us and end users.
+    implementation "maven.modrinth:create-aeronautics:44pLdPGg" // Create Aeronautics 1.3.2+mc1.21.1 (neoforge)
+    aeronauticsBundle "maven.modrinth:create-aeronautics:44pLdPGg"
+    // We still need their classes to compile against; since Aeronautics/Offroad/Simulated aren't separately
+    // published anywhere, we compile against copies extracted (see extractAeronauticsLibs below) from the
+    // exact same 1.3.2 release JarJar'd inside the artifact above, instead of a stale hand-placed local jar.
+    // This is compileOnly: it must NOT be implementation, or NeoForge would load our copy instead of the one
+    // Create Aeronautics already provides at runtime (a version mismatch here is what caused a real-world
+    // ClassCastException: we compiled against Simulated 1.2.1 while 1.3.2 was actually loaded at runtime).
+    compileOnly fileTree(layout.buildDirectory.dir("aeronauticsLibs")) {
+        include "*.jar"
+        builtBy extractAeronauticsLibs
+    }
+
+    // Anything else still needed locally (e.g. sable-companion, veil) that isn't one of the above.
+    implementation fileTree(dir: 'libs', include: ['*.jar'], exclude: [
+            'create-1.21.1-6.0.10.jar',
+            'create-aeronautics-bundled-1.21.1-1.2.1.jar',
+            'sable-neoforge-1.21.1-1.2.2.jar',
+            'Registrate-MC1.21-1.3.0+67.jar',
+            'dev.eriksonn.aeronautics.aeronautics-neoforge-1.21.1-1.2.1.jar',
+            'dev.ryanhcode.offroad.offroad-neoforge-1.21.1-1.2.1.jar',
+            'dev.simulated_team.simulated.simulated-neoforge-1.21.1-1.2.1.jar'
+    ])
     //implementation files("libs/flywheel-extracted.jar")
-    // implementation files("libs/create-aeronautics-bundled-1.21.1-1.2.1.jar")
-    // implementation files("libs/sable-neoforge-1.21.1-1.2.2.jar")
     //implementation files("libs/sable-companion-common-1.21.1-1.6.0.jar")
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

@@ -40,6 +40,7 @@
 package dev.qwxon.tracks.mixin;
 
 import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
+import dev.qwxon.tracks.compat.SableCollisionCompat;
 import dev.qwxon.tracks.mixin_interface.WheelMountOffsetAccess;
 import dev.ryanhcode.offroad.content.blocks.wheel_mount.WheelMountBlock;
 import dev.ryanhcode.offroad.content.blocks.wheel_mount.WheelMountBlockEntity;
@@ -156,6 +157,9 @@ extends HorizontalKineticBlock {
     }
 
     protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        if (WheelMountBlockMixin.tracks$isHidden(state) && SableCollisionCompat.isSableColliderBake()) {
+            return Shapes.empty();
+        }
         if (WheelMountBlockMixin.tracks$isHidden(state) && context != CollisionContext.empty()) {
             return Shapes.empty();
         }

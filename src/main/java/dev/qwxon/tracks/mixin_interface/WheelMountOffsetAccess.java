@@ -8,7 +8,7 @@ public interface WheelMountOffsetAccess {
 
     public double tracks$adjustLongitudinalOffset(int var1);
 
-    public double tracks$adjustHeightOffset(int var1);
+    public double tracks$adjustHeightOffset(int var1, boolean sideInteraction);
 
     public double tracks$adjustTuning(String var1, int var2);
 
